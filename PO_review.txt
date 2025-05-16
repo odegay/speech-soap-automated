@@ -1,0 +1,73 @@
+1. Unified JSON schema
+Instead of hard-coding a “subjective” payload, define a generic SOAP-note schema with these fields:
+| Field            | Purpose                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `note_id`        | UUID for cross-section linkage.                                                       |
+| `section`        | `"SUBJECTIVE"` \| `"OBJECTIVE"` \| `"ASSESSMENT"` \| `"PLAN"` (enum).                 |
+| `schema_version` | Integer for forward-compatible migrations.                                            |
+| `inputs`         | Array of `{ id, label, type, value }`. `type` is `"multi"` \| `"single"` \| `"text"`. |
+| `meta`           | Freeform object for things like `{ created_by, created_at }`.                         |
+
+
+2. Config-driven UI components
+Create a small “form renderer” that takes an array of input descriptors and spits out check-boxes, radio buttons, or text areas. Something like:
+[
+  { id: "disposition", label: "Disposition", type: "multi", options: [...] },
+  { id: "engagement", label: "Engagement Level", type: "single", options: [...] },
+  { id: "comments", label: "Unique Observations", type: "text" }
+]
+Later, Objective can inject:
+{ id: "accuracy", label: "Articulation Accuracy (%)", type: "number" }
+
+3. Section-aware prompt templates
+Store prompt templates in a lookup table, keyed by section and schema_version:
+PROMPT_TEMPLATES = {
+    ("SUBJECTIVE", 1): "...Subjective template with {disposition}, {engagement}...",
+    ("OBJECTIVE", 1): "...Objective template with {data_points}...",
+}
+When the therapist hits Generate, the backend:
+1. Loads the template for (section, schema_version).
+2. Formats it with the current inputs.
+3. Sends it to OpenAI.
+Adding a new section is literally “drop in a new template.”
+
+
+4. Phrase-bank partitioning
+Namespace your phrase bank files:
+phrasebanks/
+  subjective.json
+  objective.json
+  assessment.json
+  plan.json
+Each houses only phrases relevant to that section. Your text editor’s type-ahead reads the file corresponding to the active tab (section).
+
+5. Modular backend endpoints
+Single endpoint pattern:
+POST /generate
+{
+  "section": "SUBJECTIVE",
+  "schema_version": 1,
+  "inputs": [...]
+}
+Because the endpoint is indifferent to section names, the same route serves all four sections.
+
+6. Front-end routing / tabs
+For PoC you might hard-code one tab labeled “Subjective,” but build the router so it reads a sections.json manifest:
+[
+  { "code": "SUBJECTIVE", "label": "Subjective" },
+  { "code": "OBJECTIVE", "label": "Objective", "enabled": false }
+]
+When you flip "enabled" to true, the UI auto-renders the new tab and fetches its input config.
+
+7. Versioning & migrations
+If you rename a field later, bump schema_version. On load, a tiny migration layer upgrades old payloads to the new field names before rendering—preventing silent breakage.
+
+9. Road-map handshake
+Document the contract:
+To add a new SOAP section:
+1. Add inputs config → /configs/{section}.json
+2. Add prompt template → prompt_templates.py
+3. Add phrases → phrasebanks/{section}.json
+4. Enable section in sections.json
+With these hooks, scaling from one section to full SOAP is a configuration task, not an engineering project.
+

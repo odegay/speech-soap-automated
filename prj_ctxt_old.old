@@ -1,0 +1,56 @@
+Overview: This file outlines the EPICs and detailed user stories for an MVP that automates the Subjective section of speech therapy SOAP notes. 
+The goal is to help therapists complete the subjective portion of reports in under 1 minute by replacing free-text writing with a structured UI and AI-generated narratives. The system is a web application (frontend in TBD, backend in Python) using OpenAI’s LLM for text generation (for MVP), with basic login authentication and deployment on Google Cloud.
+
+**1. Subjective Section (LLM Powered by Structured Input)**
+This is the perfect place for LLM intervention. The goal is to capture the session's qualitative feel, patient engagement, and key observations without extensive typing.
+
+* **Input Method Ideas:**
+    * **Checklists/Multiple Choice:**
+        * Patient's overall disposition: (e.g., Engaged, Shy, Energetic, Tired, Distracted, Cooperative, Resistant) - *Select one or more.*
+        * Key activities/materials used: (e.g., Blocks, Books, Puzzles, Art, Sensory Play, Following Directions, Specific Card Decks, Conversational Play, Assessment Administered - *Select one or more*)
+        * Setting/Context: (e.g., Clinic Room, Classroom, Home, Group Setting, Individual Session) - *Select one.*
+        * Interaction style: (e.g., Parallel play, Interactive play, Structured drill, Conversational, Assessment protocol) - *Select one or more.*
+        * Language Modality: (e.g., English, Bilingual - specify language via dropdown, Gestures, AAC used) - *Select one or more.*
+    * **Dropdowns:**
+        * Level of Engagement: (e.g., High, Moderate, Low, Variable)
+        * Level of Cooperation: (e.g., High, Moderate, Low, Variable)
+        * Primary focus of session: (e.g., Expressive Language, Receptive Language, Articulation, Pragmatics, Fluency, Feeding)
+    * **Short Text/Specific Data Input Fields:**
+        * Specific examples of communication observed (e.g., spontaneous utterances, requests, questions asked, words/approximations used). The therapist could quickly type a few examples like "duck, clean, eta mushroom, more pizza".
+        * Specific difficulties or errors noted (e.g., sound substitutions, difficulty with concepts like "big/small", trouble with specific question types).
+        * Any unique or noteworthy behaviors or interactions.
+        * Notes on transition or settling in (e.g., "transitioned easily," "initially shy but warmed up").
+        * Use of Phrase Banks and Templates to Reduce Cognitive Load:
+        Incorporating pre-set phrase banks and templates will help therapists avoid “blank page syndrome” and
+        quickly populate common statements. Here are recommendations for phrase libraries and reusable
+        structures for each section:
+        Behavior/Subjective Phrase Bank: Prepare a list of descriptive phrases for common pediatric
+        behaviors and engagement levels. For example: “maintained good eye contact,” “was easily
+        distracted but redirected with cues,” “demonstrated excitement for activities,” “initially shy but warmed up,” “exhibited frustration during challenging tasks,” “required frequent redirection to task,” “remained cooperative throughout the session.” The UI can show these as selectable tags or autosuggestions.
+        By clicking these phrases, they’re added to the subjective narrative (with the LLM
+        smoothing the grammar). This saves mental effort in coming up with wording and ensures
+        professional tone (e.g., saying “required moderate assistance to stay on task” instead of a more
+        casual note).
+* **LLM Function:**
+    * The LLM takes the selected options, dropdown values, and short text inputs.
+    * It synthesizes this information into a coherent, narrative paragraph for the Subjective section.
+    * It ensures professional language and includes the patient's name appropriately.
+    * *Example Prompt Structure (internal to the system):* "Generate a Subjective note for patient [FirstName LastName]. Session details: Disposition: [List of selected dispositions]. Activities: [List of selected activities]. Interaction: [List of selected interactions]. Engagement: [Dropdown value]. Cooperation: [Dropdown value]. Observed Communication Examples: '[Text from communication examples field]'. Noted Difficulties: '[Text from difficulties field]'. Other Notes: '[Text from unique observations field]'."
+    * The LLM output would be editable by the therapist for final tweaks.
+
+**Automation Benefit for Subjective:** Reduces typing significantly. Therapist selects from lists and provides only *specific* examples/details. LLM builds the full narrative.
+
+* **Additional tech details:**
+    * The system will use the OpenAI API for the LLM.
+    * The system will be a web application.
+    * The system will be deployed on Google Cloud.    
+    * The system will use Python for the backend.
+    * The system will use plain JSONs for all dictionaries and lists.
+    * The system does not assume any persistence layer. It is stateless.
+    * The system is designed to be easily extendable to support new features.
+    * The system will be designed with security in mind.
+    * The system will be designed without scalability in mind.
+    * The system will be designed without maintainability in mind.
+    * The system will be designed with user experience in mind.
+    * The system will be designed without user privacy in mind.
+    * The system will be designed without user security in mind.
