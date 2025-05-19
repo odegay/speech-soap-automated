@@ -2,6 +2,7 @@
 
 ## Project Overview
 This project automates the Subjective section of speech therapy SOAP notes, reducing completion time to under 1 minute by replacing free-text writing with structured UI inputs and AI-generated narratives.
+For details on the project, see [prjct.md](prjct.md)
 
 ## Features
 - Structured input system for patient assessment
@@ -45,8 +46,12 @@ speech-soap-automated/
 
 2. Set up Python virtual environment:
    ```bash
+   # Windows
+   .\scripts\setup_env.ps1
+
+   # Linux/Mac
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    pip install -r requirements.txt
    ```
 
@@ -68,6 +73,14 @@ speech-soap-automated/
    npm start
    ```
 
+### Development Tools
+- Code formatting: `black .`
+- Linting: `flake8`
+- Import sorting: `isort .`
+- Testing: `pytest`
+
+For more detailed guidelines, see [Development Guidelines](docs/development_guidelines.md)
+
 ## Testing
 ```bash
 # Run backend tests
@@ -79,6 +92,28 @@ npm test
 
 ## Deployment
 The application is automatically deployed to Google Cloud when changes are pushed to the main branch.
+
+### Google Cloud Build Configuration
+The project uses Google Cloud Build for continuous integration and deployment. The build process is defined in `cloudbuild.yaml` and includes:
+- Installing Python dependencies
+- Running tests
+- Building the frontend application
+- Deploying to Google Cloud App Engine
+
+### Deployment Prerequisites
+1. Google Cloud project set up
+2. Cloud Build API enabled
+3. App Engine API enabled
+4. Appropriate IAM permissions configured
+
+### Manual Deployment
+To deploy manually:
+```bash
+# Deploy to Google Cloud
+gcloud app deploy app.yaml
+```
+
+For more information about the deployment process, see the [Google Cloud documentation](https://cloud.google.com/build/docs).
 
 ## Contributing
 1. Create a new branch for your feature

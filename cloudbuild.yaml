@@ -1,0 +1,47 @@
+steps:
+  # Install Python dependencies
+  - name: 'python:3.9'
+    entrypoint: pip
+    args: ['install', '-r', 'requirements.txt']
+
+  # Run Python tests
+  - name: 'python:3.9'
+    entrypoint: pytest
+    args: ['--cov=src']
+
+  # Install Node.js dependencies and build frontend
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['install']
+    dir: 'src/frontend'
+
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['run', 'build']
+    dir: 'src/frontend'
+
+  # Deploy to Google Cloud
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'app'
+      - 'deploy'
+      - '--quiet'
+      - '--project=${PROJECT_ID}'
+      - '--version=${SHORT_SHA}'
+
+# Define build timeout
+timeout: '1800s'
+
+# Define build artifacts
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}-build-artifacts'
+    paths: ['src/frontend/build/**']
+
+# Define build substitutions
+substitutions:
+  _ENVIRONMENT: 'production'
+
+# Define build options
+options:
+  logging: CLOUD_LOGGING_ONLY 
