@@ -19,13 +19,14 @@ For details on the project, see [prjct.md](prjct.md)
 - Authentication: Hardcoded credentials in backend code
 
 ## Project Structure
+For details on how the backend and frontend are organized, see [Architecture Notes](docs/architecture.md).
 ```
 speech-soap-automated/
 ├── src/
-│   ├── frontend/     # Frontend application code
-│   └── backend/      # Backend server code
+│   ├── frontend/     # React frontend application
+│   └── backend/      # Flask backend server
 ├── tests/            # Test files
-└── docs/            # Documentation
+└── docs/             # Documentation and architecture notes
 ```
 
 ## Development Setup
@@ -38,6 +39,7 @@ speech-soap-automated/
 - OpenAI API key
 
 ### Local Development
+Detailed instructions are available in [docs/local_setup.md](docs/local_setup.md).
 1. Clone the repository:
    ```bash
    git clone [repository-url]
