@@ -24,31 +24,33 @@ export default function LoginPage({ onLogin, isAuthenticated }) {
   }
 
   return (
-    <div>
-      <h2>Login</h2>
+    <div className="container mt-5" style={{ maxWidth: '400px' }}>
+      <h2 className="mb-3">Login</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>
+        <div className="mb-3">
+          <label className="form-label">
             Username
             <input
               type="text"
+              className="form-control"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
           </label>
         </div>
-        <div>
-          <label>
+        <div className="mb-3">
+          <label className="form-label">
             Password
             <input
               type="password"
+              className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
         </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit">Login</button>
+        {error && <p className="text-danger">{error}</p>}
+        <button type="submit" className="btn btn-primary w-100">Login</button>
       </form>
     </div>
   );

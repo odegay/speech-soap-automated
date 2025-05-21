@@ -1,0 +1,4 @@
+[
+  {"code": "SUBJECTIVE", "label": "Subjective", "enabled": true},
+  {"code": "OBJECTIVE", "label": "Objective", "enabled": false}
+]
