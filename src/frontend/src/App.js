@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
@@ -6,6 +6,16 @@ import SoapForm from './components/SoapForm';
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [sections, setSections] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/sections')
+      .then((r) => r.json())
+      .then((data) => setSections(data.filter((s) => s.enabled)))
+      .catch(() =>
+        setSections([{ code: 'SUBJECTIVE', label: 'Subjective', enabled: true }])
+      );
+  }, []);
 
   const handleLogin = (user, pass) => {
     if (user === 'clinician' && pass === 'password') {
@@ -23,12 +33,15 @@ export default function App() {
       />
       <Route
         path="/dashboard"
-        element={authenticated ? <Dashboard /> : <Navigate to="/login" />}
+        element={authenticated ? <Dashboard sections={sections} /> : <Navigate to="/login" />}
       />
-      <Route
-        path="/soap"
-        element={authenticated ? <SoapForm /> : <Navigate to="/login" />}
-      />
+      {sections.map((s) => (
+        <Route
+          key={s.code}
+          path={`/soap/${s.code}`}
+          element={authenticated ? <SoapForm section={s.code} /> : <Navigate to="/login" />}
+        />
+      ))}
       <Route
         path="*"
         element={<Navigate to={authenticated ? '/dashboard' : '/login'} />}

@@ -1,69 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PhraseBank from './PhraseBank';
 
-const DISPOSITIONS = ['Engaged', 'Shy', 'Energetic', 'Tired', 'Distracted', 'Cooperative', 'Resistant'];
-const ACTIVITIES = ['Blocks', 'Books', 'Puzzles', 'Art', 'Sensory Play', 'Following Directions', 'Card Decks', 'Conversational Play', 'Assessment'];
-const SETTINGS = ['Clinic Room', 'Classroom', 'Home', 'Group Setting', 'Individual Session'];
-const INTERACTIONS = ['Parallel play', 'Interactive play', 'Structured drill', 'Conversational', 'Assessment protocol'];
-const LANGUAGE_MODALITY = ['English', 'Bilingual', 'Gestures', 'AAC'];
-const ENGAGEMENT_LEVEL = ['High', 'Moderate', 'Low', 'Variable'];
-const COOPERATION_LEVEL = ['High', 'Moderate', 'Low', 'Variable'];
-const PRIMARY_FOCUS = ['Expressive Language', 'Receptive Language', 'Articulation', 'Pragmatics', 'Fluency', 'Feeding'];
-
-export default function SoapForm() {
-  const [disposition, setDisposition] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [setting, setSetting] = useState('');
-  const [interaction, setInteraction] = useState([]);
-  const [languageModality, setLanguageModality] = useState([]);
-  const [engagement, setEngagement] = useState('');
-  const [cooperation, setCooperation] = useState('');
-  const [focus, setFocus] = useState('');
-
-  const [communication, setCommunication] = useState('');
-  const [difficulties, setDifficulties] = useState('');
-  const [observations, setObservations] = useState('');
-  const [transitionNotes, setTransitionNotes] = useState('');
-
+export default function SoapForm({ section }) {
+  const [fields, setFields] = useState([]);
+  const [values, setValues] = useState({});
+  const [options, setOptions] = useState({});
+  const [phrases, setPhrases] = useState([]);
   const [generated, setGenerated] = useState('');
-  const [activeField, setActiveField] = useState(null);
   const [saveMessage, setSaveMessage] = useState('');
 
-  const handleInsert = (phrase) => {
-    switch (activeField) {
-      case 'communication':
-        setCommunication((v) => v + phrase);
-        break;
-      case 'difficulties':
-        setDifficulties((v) => v + phrase);
-        break;
-      case 'observations':
-        setObservations((v) => v + phrase);
-        break;
-      case 'transitionNotes':
-        setTransitionNotes((v) => v + phrase);
-        break;
-      case 'generated':
-        setGenerated((v) => v + phrase);
-        break;
-      default:
-        break;
-    }
+  useEffect(() => {
+    fetch(`/api/config/${section}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setFields(data);
+        const init = {};
+        data.forEach((f) => {
+          init[f.id] = f.type === 'multi' ? [] : '';
+        });
+        setValues(init);
+      });
+
+    fetch(`/api/phrasebank/${section}`)
+      .then((r) => r.json())
+      .then(setPhrases)
+      .catch(() => setPhrases([]));
+  }, [section]);
+
+  useEffect(() => {
+    fields.forEach((f) => {
+      if (f.options && !options[f.options]) {
+        fetch(`/api/options/${f.options}`)
+          .then((r) => r.json())
+          .then((data) =>
+            setOptions((o) => ({ ...o, [f.options]: data }))
+          )
+          .catch(() => setOptions((o) => ({ ...o, [f.options]: [] })));
+      }
+    });
+  }, [fields, options]);
+
+  const toggleValue = (id, value) => {
+    setValues((vals) => {
+      const list = vals[id] || [];
+      if (list.includes(value)) {
+        return { ...vals, [id]: list.filter((v) => v !== value) };
+      }
+      return { ...vals, [id]: [...list, value] };
+    });
   };
 
-  const toggleValue = (value, setter, list) => {
-    if (list.includes(value)) {
-      setter(list.filter((v) => v !== value));
-    } else {
-      setter([...list, value]);
-    }
+  const handleChange = (id, value) => {
+    setValues((v) => ({ ...v, [id]: value }));
+  };
+
+  const insertPhrase = (id, phrase) => {
+    setValues((v) => ({ ...v, [id]: (v[id] || '') + phrase }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      prompt: `Disposition: ${disposition.join(', ')}\nActivities: ${activities.join(', ')}\nSetting: ${setting}\nInteraction: ${interaction.join(', ')}\nLanguage: ${languageModality.join(', ')}\nEngagement: ${engagement}\nCooperation: ${cooperation}\nFocus: ${focus}\nCommunication: ${communication}\nDifficulties: ${difficulties}\nObservations: ${observations}\nTransition: ${transitionNotes}`,
-    };
+    const lines = fields.map((f) => {
+      const val = values[f.id];
+      if (Array.isArray(val)) {
+        return `${f.label}: ${val.join(', ')}`;
+      }
+      return `${f.label}: ${val}`;
+    });
+    const payload = { prompt: lines.join('\n') };
     try {
       const resp = await fetch('/api/generate', {
         method: 'POST',
@@ -89,196 +93,96 @@ export default function SoapForm() {
     setTimeout(() => setSaveMessage(''), 2000);
   };
 
+  const renderField = (f) => {
+    if (f.type === 'multi') {
+      const opts = options[f.options] || [];
+      return (
+        <fieldset key={f.id} className="mb-3">
+          <legend className="h6">{f.label}</legend>
+          {opts.map((o) => (
+            <div className="form-check" key={o}>
+              <input
+                type="checkbox"
+                className="form-check-input"
+                checked={(values[f.id] || []).includes(o)}
+                onChange={() => toggleValue(f.id, o)}
+                id={`${f.id}-${o}`}
+              />
+              <label className="form-check-label" htmlFor={`${f.id}-${o}`}>
+                {o}
+              </label>
+            </div>
+          ))}
+        </fieldset>
+      );
+    }
+    if (f.type === 'single') {
+      const opts = options[f.options] || [];
+      return (
+        <div key={f.id} className="mb-3">
+          <label className="form-label">
+            {f.label}
+            <select
+              className="form-select"
+              value={values[f.id] || ''}
+              onChange={(e) => handleChange(f.id, e.target.value)}
+            >
+              <option value="" disabled>
+                Select
+              </option>
+              {opts.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      );
+    }
+    if (f.type === 'text') {
+      return (
+        <div key={f.id} className="mb-3">
+          <label className="form-label">
+            {f.label}
+            <textarea
+              className="form-control"
+              value={values[f.id] || ''}
+              onChange={(e) => handleChange(f.id, e.target.value)}
+              rows={3}
+            />
+          </label>
+          <PhraseBank phrases={phrases} onInsert={(p) => insertPhrase(f.id, p)} />
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div>
-      <h2>SOAP Note Form</h2>
+    <div className="container mt-4">
+      <h2 className="mb-3">{section} SOAP Form</h2>
       <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>Disposition</legend>
-          {DISPOSITIONS.map((d) => (
-            <label key={d}>
-              <input
-                type="checkbox"
-                checked={disposition.includes(d)}
-                onChange={() => toggleValue(d, setDisposition, disposition)}
-              />
-              {d}
-            </label>
-          ))}
-        </fieldset>
-
-        <fieldset>
-          <legend>Activities/Materials</legend>
-          {ACTIVITIES.map((a) => (
-            <label key={a}>
-              <input
-                type="checkbox"
-                checked={activities.includes(a)}
-                onChange={() => toggleValue(a, setActivities, activities)}
-              />
-              {a}
-            </label>
-          ))}
-        </fieldset>
-
-        <div>
-          <label>
-            Setting/Context
-            <select value={setting} onChange={(e) => setSetting(e.target.value)}>
-              <option value="" disabled>
-                Select
-              </option>
-              {SETTINGS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <fieldset>
-          <legend>Interaction Style</legend>
-          {INTERACTIONS.map((i) => (
-            <label key={i}>
-              <input
-                type="checkbox"
-                checked={interaction.includes(i)}
-                onChange={() => toggleValue(i, setInteraction, interaction)}
-              />
-              {i}
-            </label>
-          ))}
-        </fieldset>
-
-        <fieldset>
-          <legend>Language Modality</legend>
-          {LANGUAGE_MODALITY.map((l) => (
-            <label key={l}>
-              <input
-                type="checkbox"
-                checked={languageModality.includes(l)}
-                onChange={() => toggleValue(l, setLanguageModality, languageModality)}
-              />
-              {l}
-            </label>
-          ))}
-        </fieldset>
-
-        <div>
-          <label>
-            Engagement Level
-            <select value={engagement} onChange={(e) => setEngagement(e.target.value)}>
-              <option value="" disabled>
-                Select
-              </option>
-              {ENGAGEMENT_LEVEL.map((eLevel) => (
-                <option key={eLevel} value={eLevel}>
-                  {eLevel}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Cooperation Level
-            <select value={cooperation} onChange={(e) => setCooperation(e.target.value)}>
-              <option value="" disabled>
-                Select
-              </option>
-              {COOPERATION_LEVEL.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Primary Focus
-            <select value={focus} onChange={(e) => setFocus(e.target.value)}>
-              <option value="" disabled>
-                Select
-              </option>
-              {PRIMARY_FOCUS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Communication Examples
-            <textarea
-              value={communication}
-              onFocus={() => setActiveField('communication')}
-              onChange={(e) => setCommunication(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Difficulties/Errors
-            <textarea
-              value={difficulties}
-              onFocus={() => setActiveField('difficulties')}
-              onChange={(e) => setDifficulties(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Unique Observations
-            <textarea
-              value={observations}
-              onFocus={() => setActiveField('observations')}
-              onChange={(e) => setObservations(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Transition Notes
-            <textarea
-              value={transitionNotes}
-              onFocus={() => setActiveField('transitionNotes')}
-              onChange={(e) => setTransitionNotes(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <button type="submit">Generate Note</button>
+        {fields.map((f) => renderField(f))}
+        <button type="submit" className="btn btn-primary mt-2">
+          Generate Note
+        </button>
       </form>
-
-      <h3>Generated Note</h3>
+      <h3 className="mt-4">Generated Note</h3>
       <textarea
+        className="form-control"
         value={generated}
-        onFocus={() => setActiveField('generated')}
         onChange={(e) => setGenerated(e.target.value)}
         rows={6}
-        style={{ width: '100%' }}
       />
-      <div style={{ marginTop: '0.5rem' }}>
-        <button type="button" onClick={saveText}>
+      <div className="mt-2">
+        <button type="button" className="btn btn-secondary" onClick={saveText}>
           Save as Text
         </button>
         {saveMessage && (
-          <span style={{ marginLeft: '0.5rem', color: 'green' }}>{saveMessage}</span>
+          <span className="ms-2 text-success">{saveMessage}</span>
         )}
       </div>
-
-      <h3>Phrase Bank</h3>
-      <PhraseBank onInsert={handleInsert} />
     </div>
   );
 }

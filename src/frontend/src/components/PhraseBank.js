@@ -1,30 +1,24 @@
 import React, { useState } from 'react';
 
-const DEFAULT_PHRASES = [
-  'Patient was cooperative throughout the session.',
-  'Demonstrated improved expressive language skills.',
-  'Needed frequent redirection to maintain attention.',
-  'Articulation errors were noted during conversation.',
-];
-
-export default function PhraseBank({ onInsert }) {
+export default function PhraseBank({ phrases, onInsert }) {
   const [query, setQuery] = useState('');
-  const filtered = DEFAULT_PHRASES.filter((p) =>
+  const filtered = (phrases || []).filter((p) =>
     p.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '0.5rem' }}>
+    <div className="border p-2 mt-2">
       <input
         type="text"
+        className="form-control mb-2"
         placeholder="Search phrases"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+      <ul className="list-unstyled">
         {filtered.map((p) => (
-          <li key={p}>
-            <button type="button" onClick={() => onInsert(p)}>
+          <li key={p} className="mb-1">
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onInsert(p)}>
               {p}
             </button>
           </li>

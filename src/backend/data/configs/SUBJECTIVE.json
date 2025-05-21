@@ -1,0 +1,14 @@
+[
+  {"id": "disposition", "label": "Disposition", "type": "multi", "options": "dispositions"},
+  {"id": "activities", "label": "Activities/Materials", "type": "multi", "options": "activities"},
+  {"id": "setting", "label": "Setting/Context", "type": "single", "options": "settings"},
+  {"id": "interaction", "label": "Interaction Style", "type": "multi", "options": "interactions"},
+  {"id": "languageModality", "label": "Language Modality", "type": "multi", "options": "language_modality"},
+  {"id": "engagement", "label": "Engagement Level", "type": "single", "options": "engagement_level"},
+  {"id": "cooperation", "label": "Cooperation Level", "type": "single", "options": "cooperation_level"},
+  {"id": "focus", "label": "Primary Focus", "type": "single", "options": "primary_focus"},
+  {"id": "communication", "label": "Communication Examples", "type": "text"},
+  {"id": "difficulties", "label": "Difficulties/Errors", "type": "text"},
+  {"id": "observations", "label": "Unique Observations", "type": "text"},
+  {"id": "transitionNotes", "label": "Transition Notes", "type": "text"}
+]

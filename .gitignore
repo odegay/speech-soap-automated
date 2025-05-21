@@ -68,4 +68,5 @@ coverage.xml
 !package.json
 !package-lock.json
 !tsconfig.json
-!tslint.json 
+!tslint.json
+!src/backend/data/**/*.json

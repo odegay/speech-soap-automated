@@ -1,16 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function Dashboard() {
+export default function Dashboard({ sections }) {
   return (
-    <div>
-      <h2>Dashboard</h2>
-      <div>
-        <Link to="/soap">
-          <button type="button">New SOAP Note</button>
-        </Link>
+    <div className="container mt-4">
+      <h2 className="mb-3">Dashboard</h2>
+      <div className="mb-3">
+        {sections.map((s) => (
+          <Link key={s.code} to={`/soap/${s.code}`} className="btn btn-primary me-2">
+            New {s.label} Note
+          </Link>
+        ))}
       </div>
-      <div style={{ marginTop: '1rem' }}>
+      <div>
         <em>Future features will appear here.</em>
       </div>
     </div>
