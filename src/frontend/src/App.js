@@ -1,24 +1,38 @@
-import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
-
-function Home() {
-  return <h2>Home</h2>;
-}
-
-function About() {
-  return <h2>About</h2>;
-}
+import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './components/LoginPage';
+import Dashboard from './components/Dashboard';
+import SoapForm from './components/SoapForm';
 
 export default function App() {
+  const [authenticated, setAuthenticated] = useState(false);
+
+  const handleLogin = (user, pass) => {
+    if (user === 'clinician' && pass === 'password') {
+      setAuthenticated(true);
+      return true;
+    }
+    return false;
+  };
+
   return (
-    <div>
-      <nav>
-        <Link to="/">Home</Link> | <Link to="/about">About</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route
+        path="/login"
+        element={<LoginPage onLogin={handleLogin} isAuthenticated={authenticated} />}
+      />
+      <Route
+        path="/dashboard"
+        element={authenticated ? <Dashboard /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/soap"
+        element={authenticated ? <SoapForm /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="*"
+        element={<Navigate to={authenticated ? '/dashboard' : '/login'} />}
+      />
+    </Routes>
   );
 }
