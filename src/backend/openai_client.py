@@ -3,7 +3,11 @@ import os
 import openai
 from dotenv import load_dotenv
 
+# Load the default environment file first and override with local
+# settings when available. This allows developers to keep local-only
+# configuration in `.env.local` which is ignored by git.
 load_dotenv()
+load_dotenv(".env.local", override=True)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 openai.api_key = OPENAI_API_KEY

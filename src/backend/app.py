@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from flask import Flask, jsonify, request
@@ -64,4 +65,7 @@ def get_phrasebank(section: str):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Use BACKEND_PORT from the environment when running locally.
+    # Defaults to 5000 which matches the frontend proxy configuration.
+    port = int(os.getenv("BACKEND_PORT", "5000"))
+    app.run(debug=True, port=port)
