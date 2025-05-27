@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 
-export default function PhraseBank({ phrases, onInsert }) {
+export default function PhraseBank({ phrases = [], onInsert }) {
   const [query, setQuery] = useState('');
-  const filtered = (phrases || []).filter((p) =>
+  
+  // Ensure phrases is always an array
+  const phrasesArray = Array.isArray(phrases) ? phrases : [];
+  
+  const filtered = phrasesArray.filter((p) =>
     p.toLowerCase().includes(query.toLowerCase())
   );
 

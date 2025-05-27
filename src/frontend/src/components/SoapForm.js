@@ -5,28 +5,34 @@ export default function SoapForm({ section }) {
   const [fields, setFields] = useState([]);
   const [values, setValues] = useState({});
   const [options, setOptions] = useState({});
-  const [phrases, setPhrases] = useState([]);
+  const [phrases, setPhrases] = useState({});
   const [generated, setGenerated] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
+  const [collapsedSections, setCollapsedSections] = useState({});
 
+  // Load form configuration
   useEffect(() => {
     fetch(`/api/config/${section}`)
       .then((r) => r.json())
       .then((data) => {
-        setFields(data);
+        // Sort fields by order if specified
+        const sortedFields = [...data].sort((a, b) => (a.order || 0) - (b.order || 0));
+        setFields(sortedFields);
         const init = {};
-        data.forEach((f) => {
+        const collapsed = {};
+        sortedFields.forEach((f) => {
           init[f.id] = f.type === 'multi' ? [] : '';
+          // Initialize collapsed state based on collapsible property
+          if (f.collapsible) {
+            collapsed[f.id] = true;
+          }
         });
         setValues(init);
+        setCollapsedSections(collapsed);
       });
-
-    fetch(`/api/phrasebank/${section}`)
-      .then((r) => r.json())
-      .then(setPhrases)
-      .catch(() => setPhrases([]));
   }, [section]);
 
+  // Load options for fields
   useEffect(() => {
     fields.forEach((f) => {
       if (f.options && !options[f.options]) {
@@ -39,6 +45,22 @@ export default function SoapForm({ section }) {
       }
     });
   }, [fields, options]);
+
+  // Load phrasebanks for text fields
+  useEffect(() => {
+    const textFields = fields.filter(f => f.type === 'text');
+    textFields.forEach(field => {
+      if (!phrases[field.id]) {
+        fetch(`/api/phrasebank/${field.id}`)
+          .then((r) => r.json())
+          .then((data) => {
+            const phrasesArray = Array.isArray(data) ? data : [];
+            setPhrases(prev => ({ ...prev, [field.id]: phrasesArray }));
+          })
+          .catch(() => setPhrases(prev => ({ ...prev, [field.id]: [] })));
+      }
+    });
+  }, [fields]);
 
   const toggleValue = (id, value) => {
     setValues((vals) => {
@@ -56,6 +78,13 @@ export default function SoapForm({ section }) {
 
   const insertPhrase = (id, phrase) => {
     setValues((v) => ({ ...v, [id]: (v[id] || '') + phrase }));
+  };
+
+  const toggleCollapse = (id) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -94,69 +123,107 @@ export default function SoapForm({ section }) {
   };
 
   const renderField = (f) => {
-    if (f.type === 'multi') {
-      const opts = options[f.options] || [];
-      return (
-        <fieldset key={f.id} className="mb-3">
-          <legend className="h6">{f.label}</legend>
-          {opts.map((o) => (
-            <div className="form-check" key={o}>
-              <input
-                type="checkbox"
-                className="form-check-input"
-                checked={(values[f.id] || []).includes(o)}
-                onChange={() => toggleValue(f.id, o)}
-                id={`${f.id}-${o}`}
-              />
-              <label className="form-check-label" htmlFor={`${f.id}-${o}`}>
-                {o}
-              </label>
-            </div>
-          ))}
-        </fieldset>
-      );
-    }
-    if (f.type === 'single') {
-      const opts = options[f.options] || [];
-      return (
-        <div key={f.id} className="mb-3">
-          <label className="form-label">
-            {f.label}
-            <select
-              className="form-select"
-              value={values[f.id] || ''}
-              onChange={(e) => handleChange(f.id, e.target.value)}
-            >
-              <option value="" disabled>
-                Select
-              </option>
-              {opts.map((o) => (
-                <option key={o} value={o}>
+    const isCollapsed = f.collapsible && collapsedSections[f.id];
+    const fieldContent = (
+      <>
+        {f.type === 'multi' && (
+          <fieldset className="mb-3">
+            <legend className="h6">{f.label}</legend>
+            {(options[f.options] || []).map((o) => (
+              <div className="form-check" key={o}>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  checked={(values[f.id] || []).includes(o)}
+                  onChange={() => toggleValue(f.id, o)}
+                  id={`${f.id}-${o}`}
+                />
+                <label className="form-check-label" htmlFor={`${f.id}-${o}`}>
                   {o}
+                </label>
+              </div>
+            ))}
+          </fieldset>
+        )}
+        {f.type === 'single' && (
+          <div className="mb-3">
+            <label className="form-label">
+              {f.label}
+              <select
+                className="form-select"
+                value={values[f.id] || ''}
+                onChange={(e) => handleChange(f.id, e.target.value)}
+              >
+                <option value="" disabled>
+                  Select
                 </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      );
-    }
-    if (f.type === 'text') {
-      return (
-        <div key={f.id} className="mb-3">
-          <label className="form-label">
-            {f.label}
+                {(options[f.options] || []).map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+        {f.type === 'input' && (
+          <div className="mb-3">
+            <label className="form-label">
+              {f.label}
+              <input
+                type="text"
+                className="form-control"
+                value={values[f.id] || ''}
+                onChange={(e) => handleChange(f.id, e.target.value)}
+                placeholder={f.placeholder || ''}
+              />
+            </label>
+          </div>
+        )}
+        {f.type === 'text' && (
+          <div className="mb-3">
+            <label className="form-label">{f.label}</label>
+            <PhraseBank phrases={Array.isArray(phrases[f.id]) ? phrases[f.id] : []} onInsert={(p) => insertPhrase(f.id, p)} />
             <textarea
-              className="form-control"
+              className="form-control mt-2"
               value={values[f.id] || ''}
               onChange={(e) => handleChange(f.id, e.target.value)}
               rows={3}
             />
-          </label>
-          <PhraseBank phrases={phrases} onInsert={(p) => insertPhrase(f.id, p)} />
+          </div>
+        )}
+      </>
+    );
+
+    if (f.collapsible) {
+      return (
+        <div key={f.id} className="mb-3 border rounded p-2">
+          <div 
+            className="d-flex justify-content-between align-items-center cursor-pointer"
+            onClick={() => toggleCollapse(f.id)}
+            style={{ cursor: 'pointer' }}
+          >
+            <h6 className="mb-0">{f.label}</h6>
+            <button 
+              className="btn btn-sm btn-link"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleCollapse(f.id);
+              }}
+            >
+              {isCollapsed ? '▼' : '▲'}
+            </button>
+          </div>
+          {!isCollapsed && fieldContent}
         </div>
       );
     }
-    return null;
+
+    return (
+      <div key={f.id}>
+        {fieldContent}
+      </div>
+    );
   };
 
   return (

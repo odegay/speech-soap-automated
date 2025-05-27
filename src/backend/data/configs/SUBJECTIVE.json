@@ -1,14 +1,16 @@
 [
-  {"id": "disposition", "label": "Disposition", "type": "multi", "options": "dispositions"},
-  {"id": "activities", "label": "Activities/Materials", "type": "multi", "options": "activities"},
-  {"id": "setting", "label": "Setting/Context", "type": "single", "options": "settings"},
-  {"id": "interaction", "label": "Interaction Style", "type": "multi", "options": "interactions"},
-  {"id": "languageModality", "label": "Language Modality", "type": "multi", "options": "language_modality"},
-  {"id": "engagement", "label": "Engagement Level", "type": "single", "options": "engagement_level"},
-  {"id": "cooperation", "label": "Cooperation Level", "type": "single", "options": "cooperation_level"},
-  {"id": "focus", "label": "Primary Focus", "type": "single", "options": "primary_focus"},
-  {"id": "communication", "label": "Communication Examples", "type": "text"},
-  {"id": "difficulties", "label": "Difficulties/Errors", "type": "text"},
-  {"id": "observations", "label": "Unique Observations", "type": "text"},
-  {"id": "transitionNotes", "label": "Transition Notes", "type": "text"}
+  {"id": "patientname", "label": "Patient First name", "type": "input", "order": 1, "collapsible": false, "placeholder": "Enter patient's first name"},
+  {"id": "setting", "label": "Setting/Context", "type": "single", "order": 2, "collapsible": false, "options": "settings"},
+  {"id": "interaction", "label": "Interaction Style", "type": "multi", "order": 3, "collapsible": false, "options": "interactions"},
+  {"id": "focus", "label": "Primary Focus", "type": "single", "order": 4, "collapsible": false, "options": "primary_focus"},
+  {"id": "languageModality", "label": "Language Modality", "type": "multi", "order": 5, "collapsible": false, "options": "language_modality"},
+  {"id": "activities", "label": "Activities/Materials", "type": "multi", "order": 6, "collapsible": false, "options": "activities"},  
+  {"id": "disposition", "label": "Disposition", "type": "multi", "order": 7, "collapsible": false, "options": "dispositions"},    
+  {"id": "engagement", "label": "Engagement Level", "type": "single", "order": 8, "collapsible": false, "options": "engagement_level"},
+  {"id": "cooperation", "label": "Cooperation Level", "type": "single", "order": 9, "collapsible": false, "options": "cooperation_level"},
+  
+  {"id": "communication", "label": "Communication Examples", "type": "text", "order": 10, "collapsible": true},
+  {"id": "difficulties", "label": "Difficulties/Errors", "type": "text", "order": 11, "collapsible": true},
+  {"id": "observations", "label": "Unique Observations", "type": "text", "order": 12, "collapsible": true},
+  {"id": "transitionNotes", "label": "Transition Notes", "type": "text", "order": 13, "collapsible": true}
 ]

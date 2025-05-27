@@ -1,13 +1,11 @@
 import json
-import os
 from pathlib import Path
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from .openai_client import generate_text
-
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
+from .config import SERVER_CONFIG, CORS_CONFIG, DATA_DIR
 
 
 def load_json(path: Path):
@@ -16,6 +14,13 @@ def load_json(path: Path):
 
 
 app = Flask(__name__)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": CORS_CONFIG["origins"],
+        "methods": CORS_CONFIG["methods"],
+        "allow_headers": CORS_CONFIG["allow_headers"]
+    }
+})
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -58,14 +63,28 @@ def get_config(section: str):
 
 @app.route("/api/phrasebank/<section>")
 def get_phrasebank(section: str):
-    path = DATA_DIR / "phrasebanks" / f"{section}.json"
+    # Map section names to their corresponding phrasebank files
+    section_mapping = {
+        "communication": "communication_examples",
+        "difficulties": "noted_difficulties",
+        "observations": "unique_observations",
+        "transitionNotes": "transition_notes"
+    }
+    
+    # Get the corresponding phrasebank file name
+    phrasebank_file = section_mapping.get(section)
+    if not phrasebank_file:
+        return jsonify({"error": "not found"}), 404
+        
+    path = DATA_DIR / "phrasebanks" / f"{phrasebank_file}.json"
     if not path.exists():
         return jsonify({"error": "not found"}), 404
     return jsonify(load_json(path))
 
 
 if __name__ == "__main__":
-    # Use BACKEND_PORT from the environment when running locally.
-    # Defaults to 5000 which matches the frontend proxy configuration.
-    port = int(os.getenv("BACKEND_PORT", "5000"))
-    app.run(debug=True, port=port)
+    app.run(
+        host=SERVER_CONFIG["host"],
+        port=SERVER_CONFIG["port"],
+        debug=SERVER_CONFIG["debug"]
+    )
