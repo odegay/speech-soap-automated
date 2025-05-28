@@ -60,7 +60,9 @@ Detailed instructions are available in [docs/local_setup.md](docs/local_setup.md
 3. Set up environment variables:
    ```bash
    cp .env.example .env
-   # Edit .env with your OpenAI API key
+   cp .env.local.example .env.local
+   cp src/frontend/.env.local.example src/frontend/.env.local
+   # Edit .env and .env.local with your settings
    ```
 
 4. Start the development server:
@@ -84,6 +86,7 @@ Detailed instructions are available in [docs/local_setup.md](docs/local_setup.md
 For more detailed guidelines, see [Development Guidelines](docs/development_guidelines.md)
 
 ## Testing
+All backend tests mock the OpenAI API so they can run without internet access.
 ```bash
 # Run backend tests
 pytest

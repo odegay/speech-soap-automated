@@ -17,7 +17,7 @@ cp src/frontend/.env.local.example src/frontend/.env.local
 # edit .env and .env.local files
 ```
 
-3. Start the backend server (uses `BACKEND_PORT` from `.env.local`):
+3. Start the backend server (uses `FLASK_PORT` from `.env.local`):
 
 ```bash
 cd src/backend
@@ -32,4 +32,4 @@ npm install
 npm start
 ```
 
-The application will be available at `http://localhost:$FRONTEND_PORT` with the backend API running on `http://localhost:$BACKEND_PORT` (configured in `.env.local`).
+The application will be available at `http://localhost:$FRONTEND_PORT` with the backend API running on `http://localhost:$FLASK_PORT` (configured in `.env.local`).
