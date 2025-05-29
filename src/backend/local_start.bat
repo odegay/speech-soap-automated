@@ -16,14 +16,14 @@ if not exist "venv\Lib\site-packages\flask" (
     pip install -r requirements.txt
 )
 
-:: Set environment variables
-set FLASK_APP=app.py
-set FLASK_ENV=development
-set FLASK_DEBUG=True
-set FLASK_HOST=0.0.0.0
-set FLASK_PORT=3000
-set OPENAI_API_KEY=your_api_key_here
-set CORS_ORIGINS=http://localhost:8788
+:: Check if .env file exists
+if not exist ".env" (
+    echo Warning: .env file not found. Using default configuration.
+    echo Please create a .env file with your configuration.
+)
 
-:: Start the Flask application
-python -m flask run --host=%FLASK_HOST% --port=%FLASK_PORT% 
+:: Add project root to PYTHONPATH
+set PYTHONPATH=%PYTHONPATH%;%~dp0..\..
+
+:: Start the Flask application using our app.py directly
+python -m src.backend.app 

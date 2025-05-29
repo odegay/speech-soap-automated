@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from flask import Flask, jsonify, request
@@ -6,6 +7,14 @@ from flask_cors import CORS
 
 from .openai_client import generate_text
 from .config import SERVER_CONFIG, CORS_CONFIG, DATA_DIR
+from .prompts import render_prompt, TemplateNotFoundError
+from .formatting import format_text
+from .version import get_version_info
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def load_json(path: Path):
@@ -14,24 +23,47 @@ def load_json(path: Path):
 
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": CORS_CONFIG["origins"],
-        "methods": CORS_CONFIG["methods"],
-        "allow_headers": CORS_CONFIG["allow_headers"]
-    }
-})
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": CORS_CONFIG["origins"],
+            "methods": CORS_CONFIG["methods"],
+            "allow_headers": CORS_CONFIG["allow_headers"],
+        }
+    },
+)
 
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
     data = request.json or {}
-    prompt = data.get("prompt", "")
+    section = data.get("section")
+    version = data.get("schema_version", "v1")
+    inputs = data.get("inputs", {})
+
+    if not section or not isinstance(inputs, dict):
+        return jsonify({"error": "Invalid request: missing section or inputs"}), 400
+
     try:
-        response = generate_text(prompt)
-        return jsonify({"text": response})
-    except Exception as e:
+        prompt = render_prompt(section, version, inputs)
+    except TemplateNotFoundError as e:
+        logger.error(f"Template not found: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except KeyError as e:
+        logger.error(f"Missing required input: {str(e)}")
+        return jsonify({"error": f"Missing required input: {str(e)}"}), 400
+
+    try:
+        raw_text = generate_text(prompt)
+        formatted = format_text(section, raw_text)
+        return jsonify({"text": formatted})
+    except ValueError as e:
+        logger.error(f"OpenAI API error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 
 @app.route("/api/health")
@@ -68,23 +100,28 @@ def get_phrasebank(section: str):
         "communication": "communication_examples",
         "difficulties": "noted_difficulties",
         "observations": "unique_observations",
-        "transitionNotes": "transition_notes"
+        "transitionNotes": "transition_notes",
     }
-    
+
     # Get the corresponding phrasebank file name
     phrasebank_file = section_mapping.get(section)
     if not phrasebank_file:
         return jsonify({"error": "not found"}), 404
-        
+
     path = DATA_DIR / "phrasebanks" / f"{phrasebank_file}.json"
     if not path.exists():
         return jsonify({"error": "not found"}), 404
     return jsonify(load_json(path))
 
 
+@app.route("/api/version")
+def version():
+    return jsonify(get_version_info())
+
+
 if __name__ == "__main__":
     app.run(
         host=SERVER_CONFIG["host"],
         port=SERVER_CONFIG["port"],
-        debug=SERVER_CONFIG["debug"]
+        debug=SERVER_CONFIG["debug"],
     )

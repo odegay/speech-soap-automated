@@ -1,24 +1,26 @@
 import os
-
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load the default environment file first and override with local
-# settings when available. This allows developers to keep local-only
-# configuration in `.env.local` which is ignored by git.
-load_dotenv()
-load_dotenv(".env.local", override=True)
+from .config import OPENAI_CONFIG
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-openai.api_key = OPENAI_API_KEY
+# Initialize the OpenAI client
+client = OpenAI(api_key=OPENAI_CONFIG["api_key"])
 
 
 def generate_text(prompt: str) -> str:
-    if not OPENAI_API_KEY:
+    if not OPENAI_CONFIG["api_key"]:
         raise ValueError("OpenAI API key not configured")
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=100,
-    )
-    return response.choices[0].message["content"].strip()
+    
+    try:
+        response = client.chat.completions.create(
+            model=OPENAI_CONFIG["model"],
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=OPENAI_CONFIG["max_tokens"],
+            temperature=0.7
+        )
+        if not response.choices:
+            raise ValueError("No response from OpenAI API")
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        raise ValueError(f"OpenAI API error: {str(e)}")

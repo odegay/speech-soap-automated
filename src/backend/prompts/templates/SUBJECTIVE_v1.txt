@@ -1,0 +1,13 @@
+Subjective Note for ${patientname}
+Setting/context: ${setting}
+Interaction style: ${interaction}
+Primary focus: ${focus}
+Language modality: ${languageModality}
+Activities/materials: ${activities}
+Disposition: ${disposition}
+Engagement level: ${engagement}
+Cooperation level: ${cooperation}
+Communication examples: ${communication}
+Difficulties/errors: ${difficulties}
+Unique observations: ${observations}
+Transition notes: ${transitionNotes}
