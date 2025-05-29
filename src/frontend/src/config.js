@@ -1,6 +1,6 @@
 const config = {
     api: {
-        baseUrl: 'http://localhost:3000',  // Backend URL
+        baseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
         endpoints: {
             health: '/api/health',
             version: '/api/version',
@@ -14,3 +14,4 @@ const config = {
 };
 
 export default config; 
+

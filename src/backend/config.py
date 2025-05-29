@@ -2,14 +2,31 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# First try to load from src/backend/.env
+try:
+    from google.cloud import secretmanager
+except ImportError:  # pragma: no cover - optional dependency
+    secretmanager = None
+
+# Load environment variables from .env file for local development
 backend_env = Path(__file__).resolve().parent / ".env"
 if backend_env.exists():
     load_dotenv(backend_env)
 else:
     # Fallback to root .env
     load_dotenv()
+
+
+def _load_secret(secret_id: str) -> str:
+    """Load a secret from Google Secret Manager if available."""
+    if not secretmanager or not os.getenv("GOOGLE_CLOUD_PROJECT"):
+        return ""
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{os.environ['GOOGLE_CLOUD_PROJECT']}/secrets/{secret_id}/versions/latest"
+        response = client.access_secret_version(name=name)
+        return response.payload.data.decode("UTF-8")
+    except Exception:
+        return ""
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -26,7 +43,7 @@ SERVER_CONFIG = {
 
 # OpenAI configuration
 OPENAI_CONFIG = {
-    "api_key": os.getenv("OPENAI_API_KEY", ""),
+    "api_key": os.getenv("OPENAI_API_KEY") or _load_secret("OPENAI_API_KEY"),
     "model": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
     "max_tokens": int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
 }

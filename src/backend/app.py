@@ -3,6 +3,11 @@ import logging
 import re
 from pathlib import Path
 
+try:
+    from google.cloud import logging as cloud_logging
+except ImportError:  # pragma: no cover - optional dependency
+    cloud_logging = None
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -26,6 +31,13 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
     handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()],
 )
+
+if cloud_logging and os.getenv("GOOGLE_CLOUD_PROJECT"):
+    try:  # pragma: no cover - optional dependency
+        cloud_logging.Client().setup_logging()
+    except Exception:
+        pass
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,6 +57,11 @@ CORS(
         }
     },
 )
+
+
+@app.before_request
+def log_request_info():
+    logger.info("%s %s", request.method, request.path)
 
 VALID_NAME = re.compile(r"^[A-Za-z0-9_]+$")
 

@@ -1,47 +1,53 @@
 steps:
-  # Install Python dependencies
-  - name: 'python:3.9'
-    entrypoint: pip
-    args: ['install', '-r', 'requirements.txt']
+  # Backend: install dependencies and run tests
+  - name: 'python:3.11'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pip install -r src/backend/requirements.txt
+        pytest --cov=src
 
-  # Run Python tests
-  - name: 'python:3.9'
-    entrypoint: pytest
-    args: ['--cov=src']
-
-  # Install Node.js dependencies and build frontend
+  # Frontend build and tests
   - name: 'node:18'
+    dir: 'src/frontend'
     entrypoint: npm
     args: ['install']
-    dir: 'src/frontend'
-
   - name: 'node:18'
+    dir: 'src/frontend'
+    entrypoint: npm
+    args: ['test']
+  - name: 'node:18'
+    dir: 'src/frontend'
     entrypoint: npm
     args: ['run', 'build']
-    dir: 'src/frontend'
 
-  # Deploy to Google Cloud
+  # Build backend container and push
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/soap-backend:$SHORT_SHA', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/soap-backend:$SHORT_SHA']
+
+  # Deploy backend to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
-      - 'app'
+      - 'run'
       - 'deploy'
+      - 'soap-backend'
+      - '--image=gcr.io/$PROJECT_ID/soap-backend:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
       - '--quiet'
-      - '--project=${PROJECT_ID}'
-      - '--version=${SHORT_SHA}'
+      - '--allow-unauthenticated'
 
-# Define build timeout
-timeout: '1800s'
-
-# Define build artifacts
-artifacts:
-  objects:
-    location: 'gs://${PROJECT_ID}-build-artifacts'
-    paths: ['src/frontend/build/**']
-
-# Define build substitutions
-substitutions:
-  _ENVIRONMENT: 'production'
-
-# Define build options
+  # Deploy frontend to Firebase Hosting
+  - name: 'gcr.io/cloud-builders/npm'
+    dir: 'src/frontend'
+    args: ['install', '-g', 'firebase-tools']
+  - name: 'gcr.io/cloud-builders/firebase'
+    dir: 'src/frontend'
+    args: ['deploy', '--project', '$PROJECT_ID', '--only', 'hosting']
+images:
+  - 'gcr.io/$PROJECT_ID/soap-backend:$SHORT_SHA'
 options:
-  logging: CLOUD_LOGGING_ONLY 
+  logging: CLOUD_LOGGING_ONLY
