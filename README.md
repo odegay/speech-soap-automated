@@ -1,132 +1,136 @@
-# Speech Therapy SOAP Notes Automation
+# Speech Therapy SOAP Note Generator
 
-## Project Overview
-This project automates the Subjective section of speech therapy SOAP notes, reducing completion time to under 1 minute by replacing free-text writing with structured UI inputs and AI-generated narratives.
-For details on the project, see [prjct.md](prjct.md)
+An automated system for generating Subjective sections of speech therapy SOAP notes using OpenAI's GPT model.
 
 ## Features
-- Structured input system for patient assessment
-- Phrase bank system with type-search functionality
-- LLM-powered narrative generation
-- Local development and testing support
-- Simple text export functionality
 
-## Technical Stack
-- Frontend: Web Application (Simplest framework suitable for PoC)
-- Backend: Python
-- AI: OpenAI's LLM
-- Deployment: Google Cloud
-- Authentication: Hardcoded credentials in backend code
+- Automated generation of Subjective sections for speech therapy SOAP notes
+- Structured input for patient information and transition notes
+- Version tracking for both frontend and backend
+- Configurable OpenAI model settings
+- Local development setup with environment variables
+
+## Version Information
+
+- Frontend: v1.0.0 (2024-05-26)
+- Backend: v1.0.0 (2024-05-26)
+- OpenAI Model: gpt-3.5-turbo
+
+## Prerequisites
+
+- Python 3.8 or higher
+- Node.js 14 or higher
+- OpenAI API key
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Server Configuration
+FLASK_HOST=127.0.0.1
+FLASK_PORT=3000
+FLASK_DEBUG=True
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=3000
+
+# CORS Configuration
+CORS_ORIGINS=http://localhost:3000,http://localhost:8788
+```
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/speech-soap-automated.git
+cd speech-soap-automated
+```
+
+2. Install backend dependencies:
+```bash
+cd src/backend
+pip install -r requirements.txt
+```
+
+3. Install frontend dependencies:
+```bash
+cd ../frontend
+npm install
+```
+
+## Running the Application
+
+### Local Development
+
+1. Start the backend server:
+```bash
+cd src/backend
+python app.py
+```
+
+2. Start the frontend development server:
+```bash
+cd ../frontend
+npm start
+```
+
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3000/api
+
+### Using the Batch Script
+
+For Windows users, you can use the provided batch script to start both servers:
+
+```bash
+local_start.bat
+```
+
+## API Endpoints
+
+### Version Information
+- `GET /api/version`
+  - Returns version information for both frontend and backend
+  - Response includes version numbers, build dates, and OpenAI model version
+
+### Note Generation
+- `POST /api/generate`
+  - Generates a Subjective section based on provided information
+  - Request body should include patient information and transition notes
+  - Returns the generated note in the response
 
 ## Project Structure
-For details on how the backend and frontend are organized, see [Architecture Notes](docs/architecture.md).
+
 ```
 speech-soap-automated/
 ├── src/
-│   ├── frontend/     # React frontend application
-│   └── backend/      # Flask backend server
-├── tests/            # Test files
-└── docs/             # Documentation and architecture notes
+│   ├── backend/
+│   │   ├── app.py              # Main Flask application
+│   │   ├── config.py           # Configuration settings
+│   │   ├── version.py          # Version information
+│   │   ├── prompts/            # Prompt templates
+│   │   └── requirements.txt    # Python dependencies
+│   └── frontend/
+│       ├── src/
+│       │   ├── components/     # React components
+│       │   ├── version.js      # Frontend version info
+│       │   └── App.js          # Main React application
+│       └── package.json        # Node.js dependencies
+├── .env                        # Environment variables
+└── local_start.bat            # Windows startup script
 ```
-
-## Development Setup
-
-### Prerequisites
-- Python 3.x
-- Node.js (for frontend development)
-- Git
-- Google Cloud account
-- OpenAI API key
-
-### Local Development
-Detailed instructions are available in [docs/local_setup.md](docs/local_setup.md).
-1. Clone the repository:
-   ```bash
-   git clone [repository-url]
-   cd speech-soap-automated
-   ```
-
-2. Set up Python virtual environment:
-   ```bash
-   # Windows
-   .\scripts\setup_env.ps1
-
-   # Linux/Mac
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   cp .env.local.example .env.local
-   cp src/frontend/.env.local.example src/frontend/.env.local
-   # Edit .env and .env.local with your settings
-   ```
-
-4. Start the development server:
-   ```bash
-   # Backend
-   cd src/backend
-   python app.py
-
-   # Frontend
-   cd src/frontend
-   npm install
-   npm start
-   ```
-
-### Development Tools
-- Code formatting: `black .`
-- Linting: `flake8`
-- Import sorting: `isort .`
-- Testing: `pytest`
-
-For more detailed guidelines, see [Development Guidelines](docs/development_guidelines.md)
-
-## Testing
-All backend tests mock the OpenAI API so they can run without internet access.
-```bash
-# Run backend tests
-pytest
-
-# Run frontend tests
-npm test
-```
-
-## Deployment
-The application is automatically deployed to Google Cloud when changes are pushed to the main branch.
-
-### Google Cloud Build Configuration
-The project uses Google Cloud Build for continuous integration and deployment. The build process is defined in `cloudbuild.yaml` and includes:
-- Installing Python dependencies
-- Running tests
-- Building the frontend application
-- Deploying to Google Cloud App Engine
-
-### Deployment Prerequisites
-1. Google Cloud project set up
-2. Cloud Build API enabled
-3. App Engine API enabled
-4. Appropriate IAM permissions configured
-
-### Manual Deployment
-To deploy manually:
-```bash
-# Deploy to Google Cloud
-gcloud app deploy app.yaml
-```
-
-For more information about the deployment process, see the [Google Cloud documentation](https://cloud.google.com/build/docs).
 
 ## Contributing
-1. Create a new branch for your feature
-2. Make your changes
-3. Submit a pull request
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
-[License information to be added]
 
-## Contact
-[Contact information to be added] 
+This project is licensed under the MIT License - see the LICENSE file for details. 
