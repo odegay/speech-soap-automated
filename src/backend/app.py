@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from flask import Flask, jsonify, request
@@ -8,6 +9,12 @@ from .openai_client import generate_text
 from .config import SERVER_CONFIG, CORS_CONFIG, DATA_DIR
 from .prompts import render_prompt, TemplateNotFoundError
 from .formatting import format_text
+from .version import get_version_info
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def load_json(path: Path):
@@ -36,19 +43,27 @@ def generate():
     inputs = data.get("inputs", {})
 
     if not section or not isinstance(inputs, dict):
-        return jsonify({"error": "invalid request"}), 400
+        return jsonify({"error": "Invalid request: missing section or inputs"}), 400
 
     try:
         prompt = render_prompt(section, version, inputs)
     except TemplateNotFoundError as e:
+        logger.error(f"Template not found: {str(e)}")
         return jsonify({"error": str(e)}), 400
+    except KeyError as e:
+        logger.error(f"Missing required input: {str(e)}")
+        return jsonify({"error": f"Missing required input: {str(e)}"}), 400
 
     try:
         raw_text = generate_text(prompt)
         formatted = format_text(section, raw_text)
         return jsonify({"text": formatted})
-    except Exception as e:
+    except ValueError as e:
+        logger.error(f"OpenAI API error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 
 @app.route("/api/health")
@@ -97,6 +112,11 @@ def get_phrasebank(section: str):
     if not path.exists():
         return jsonify({"error": "not found"}), 404
     return jsonify(load_json(path))
+
+
+@app.route("/api/version")
+def version():
+    return jsonify(get_version_info())
 
 
 if __name__ == "__main__":

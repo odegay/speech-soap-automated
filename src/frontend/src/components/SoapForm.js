@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PhraseBank from './PhraseBank';
+import config from '../config';
 
 export default function SoapForm({ section }) {
   const [fields, setFields] = useState([]);
@@ -7,12 +8,14 @@ export default function SoapForm({ section }) {
   const [options, setOptions] = useState({});
   const [phrases, setPhrases] = useState({});
   const [generated, setGenerated] = useState('');
+  const [previousGenerated, setPreviousGenerated] = useState(''); // Store previous text
   const [saveMessage, setSaveMessage] = useState('');
   const [collapsedSections, setCollapsedSections] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load form configuration
   useEffect(() => {
-    fetch(`/api/config/${section}`)
+    fetch(config.api.endpoints.config(section))
       .then((r) => r.json())
       .then((data) => {
         // Sort fields by order if specified
@@ -36,7 +39,7 @@ export default function SoapForm({ section }) {
   useEffect(() => {
     fields.forEach((f) => {
       if (f.options && !options[f.options]) {
-        fetch(`/api/options/${f.options}`)
+        fetch(config.api.endpoints.options(f.options))
           .then((r) => r.json())
           .then((data) =>
             setOptions((o) => ({ ...o, [f.options]: data }))
@@ -51,7 +54,7 @@ export default function SoapForm({ section }) {
     const textFields = fields.filter(f => f.type === 'text');
     textFields.forEach(field => {
       if (!phrases[field.id]) {
-        fetch(`/api/phrasebank/${field.id}`)
+        fetch(config.api.endpoints.phrasebank(field.id))
           .then((r) => r.json())
           .then((data) => {
             const phrasesArray = Array.isArray(data) ? data : [];
@@ -89,24 +92,26 @@ export default function SoapForm({ section }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const lines = fields.map((f) => {
-      const val = values[f.id];
-      if (Array.isArray(val)) {
-        return `${f.label}: ${val.join(', ')}`;
-      }
-      return `${f.label}: ${val}`;
-    });
-    const payload = { prompt: lines.join('\n') };
+    setIsLoading(true);
+    setPreviousGenerated(generated); // Save current text
+    setGenerated(''); // Clear the text field
+    
     try {
       const resp = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          section: section,
+          schema_version: 'v1',
+          inputs: values
+        }),
       });
       const data = await resp.json();
       setGenerated(data.text || data.error || '');
     } catch (err) {
       setGenerated('Error generating note');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -120,6 +125,13 @@ export default function SoapForm({ section }) {
     URL.revokeObjectURL(url);
     setSaveMessage('Note saved as text');
     setTimeout(() => setSaveMessage(''), 2000);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Empty function to handle Enter key press
+    }
   };
 
   const renderField = (f) => {
@@ -183,7 +195,9 @@ export default function SoapForm({ section }) {
         {f.type === 'text' && (
           <div className="mb-3">
             <label className="form-label">{f.label}</label>
-            <PhraseBank phrases={Array.isArray(phrases[f.id]) ? phrases[f.id] : []} onInsert={(p) => insertPhrase(f.id, p)} />
+            <div className="phrase-bank-container">
+              <PhraseBank phrases={Array.isArray(phrases[f.id]) ? phrases[f.id] : []} onInsert={(p) => insertPhrase(f.id, p)} />
+            </div>
             <textarea
               className="form-control mt-2"
               value={values[f.id] || ''}
@@ -199,13 +213,13 @@ export default function SoapForm({ section }) {
       return (
         <div key={f.id} className="mb-3 border rounded p-2">
           <div 
-            className="d-flex justify-content-between align-items-center cursor-pointer"
+            className="d-flex align-items-center cursor-pointer"
             onClick={() => toggleCollapse(f.id)}
             style={{ cursor: 'pointer' }}
           >
-            <h6 className="mb-0">{f.label}</h6>
             <button 
-              className="btn btn-sm btn-link"
+              type="button"
+              className="btn btn-sm btn-link p-0 me-2"
               onClick={(e) => {
                 e.stopPropagation();
                 toggleCollapse(f.id);
@@ -213,6 +227,7 @@ export default function SoapForm({ section }) {
             >
               {isCollapsed ? '▼' : '▲'}
             </button>
+            <h6 className="mb-0">{f.label}</h6>
           </div>
           {!isCollapsed && fieldContent}
         </div>
@@ -229,21 +244,49 @@ export default function SoapForm({ section }) {
   return (
     <div className="container mt-4">
       <h2 className="mb-3">{section} SOAP Form</h2>
-      <form onSubmit={handleSubmit}>
-        {fields.map((f) => renderField(f))}
-        <button type="submit" className="btn btn-primary mt-2">
-          Generate Note
-        </button>
-      </form>
+      <div className="form-container">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
+          {fields.map((f) => renderField(f))}
+          <button 
+            type="submit" 
+            className="btn btn-primary mt-2"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Generating...
+              </>
+            ) : (
+              'Generate Note'
+            )}
+          </button>
+        </form>
+      </div>
       <h3 className="mt-4">Generated Note</h3>
-      <textarea
-        className="form-control"
-        value={generated}
-        onChange={(e) => setGenerated(e.target.value)}
-        rows={6}
-      />
+      <div className="position-relative">
+        {isLoading && (
+          <div className="position-absolute top-50 start-50 translate-middle">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+        <textarea
+          className="form-control"
+          value={generated}
+          onChange={(e) => setGenerated(e.target.value)}
+          rows={6}
+          style={{ opacity: isLoading ? 0.5 : 1 }}
+        />
+      </div>
       <div className="mt-2">
-        <button type="button" className="btn btn-secondary" onClick={saveText}>
+        <button 
+          type="button" 
+          className="btn btn-secondary" 
+          onClick={saveText}
+          disabled={isLoading || !generated}
+        >
           Save as Text
         </button>
         {saveMessage && (

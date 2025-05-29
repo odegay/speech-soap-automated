@@ -1,10 +1,8 @@
 @echo off
 echo Starting Frontend Development Server...
 
-:: Set environment variables
-set REACT_APP_API_BASE_URL=http://localhost:3000
-set REACT_APP_AUTH_USERNAME=clinician
-set REACT_APP_AUTH_PASSWORD=password
+:: Set port for the React application
+set PORT=8788
 
 :: Install dependencies if node_modules doesn't exist
 if not exist node_modules (

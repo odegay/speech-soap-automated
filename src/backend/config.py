@@ -3,7 +3,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+# First try to load from src/backend/.env
+backend_env = Path(__file__).resolve().parent / ".env"
+if backend_env.exists():
+    load_dotenv(backend_env)
+else:
+    # Fallback to root .env
+    load_dotenv()
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -22,7 +28,7 @@ SERVER_CONFIG = {
 OPENAI_CONFIG = {
     "api_key": os.getenv("OPENAI_API_KEY", ""),
     "model": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-    "max_tokens": int(os.getenv("OPENAI_MAX_TOKENS", "100")),
+    "max_tokens": int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
 }
 
 # CORS configuration
