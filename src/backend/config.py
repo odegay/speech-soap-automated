@@ -39,3 +39,13 @@ CORS_CONFIG = {
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"],
 }
+
+# Authentication credentials
+AUTH_CREDENTIALS = {
+    "username": os.getenv("AUTH_USERNAME", "clinician"),
+    "password": os.getenv("AUTH_PASSWORD", "password"),
+}
+
+# Logging configuration
+LOG_FILE = os.getenv("LOG_FILE", "backend.log")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

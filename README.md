@@ -96,11 +96,23 @@ local_start.bat
   - Returns version information for both frontend and backend
   - Response includes version numbers, build dates, and OpenAI model version
 
+### Authentication
+- `POST /api/login`
+  - Accepts `{"username": "<user>", "password": "<pass>"}`
+  - Returns `{"status": "ok"}` on success
+  - Returns HTTP 401 for invalid credentials
+
 ### Note Generation
 - `POST /api/generate`
   - Generates a Subjective section based on provided information
   - Request body should include patient information and transition notes
   - Returns the generated note in the response
+
+### Template Management
+- `GET /api/templates`
+  - Lists available prompt templates
+- `GET /api/templates/<section>/<version>`
+  - Returns the text for a specific template
 
 ## Project Structure
 
@@ -122,6 +134,18 @@ speech-soap-automated/
 ├── .env                        # Environment variables
 └── local_start.bat            # Windows startup script
 ```
+
+### Container Deployment
+
+Use the provided `Dockerfile` to build a container suitable for Google Cloud Run:
+
+```bash
+docker build -t soap-backend .
+docker run -p 8080:8080 soap-backend
+```
+
+The health check endpoint `/api/health` is used by the container to verify that
+the service is running.
 
 ## Contributing
 
