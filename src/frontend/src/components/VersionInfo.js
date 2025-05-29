@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import config from '../config';
 import { getVersionInfo as getFrontendVersion } from '../version';
 
-export default function VersionInfo() {
+const VersionInfo = () => {
     const [backendVersion, setBackendVersion] = useState(null);
     const frontendVersion = getFrontendVersion();
 
@@ -25,4 +25,6 @@ export default function VersionInfo() {
             <div>OpenAI: {backendVersion.openai_model}</div>
         </div>
     );
-} 
+};
+
+export default VersionInfo; 
