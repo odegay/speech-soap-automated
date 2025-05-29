@@ -54,6 +54,24 @@ As a developer, I want to implement basic logging so that I can monitor the appl
 - [ ] Implement basic request logging in backend
 - [ ] Document logging implementation
 
+### US 5.6: CI Testing for Deployments
+As a developer, I want Cloud Build to run unit tests before deploying so that only passing code is released.
+
+**Tasks:**
+- [ ] Add frontend test step (e.g., `npm test`) to `cloudbuild.yaml`
+- [ ] Ensure existing backend tests run during the pipeline
+- [ ] Fail the build if any test fails
+- [ ] Document the CI testing workflow
+
+### US 5.7: Remove Legacy App Engine Configuration
+As a developer, I want to deprecate the App Engine deployment files so that Cloud Run is the single deployment target.
+
+**Tasks:**
+- [ ] Archive or delete `app.yaml`
+- [ ] Update `cloudbuild.yaml` to deploy the backend to Cloud Run
+- [ ] Verify Dockerfile builds correctly
+- [ ] Update documentation to reflect Cloud Run deployment
+
 ## Dependencies
 - EPIC 1: Core Application Setup
 - EPIC 2: User Interface Development
