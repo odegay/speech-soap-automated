@@ -66,3 +66,38 @@ def test_generate_endpoint_error(monkeypatch):
     monkeypatch.setattr("src.backend.app.generate_text", raise_error)
     resp = client.post("/api/generate", json=data)
     assert resp.status_code == 500
+
+
+def test_login_success():
+    client = app.test_client()
+    resp = client.post(
+        "/api/login",
+        json={"username": "clinician", "password": "password"},
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["status"] == "ok"
+
+
+def test_login_failure():
+    client = app.test_client()
+    resp = client.post(
+        "/api/login",
+        json={"username": "x", "password": "y"},
+    )
+    assert resp.status_code == 401
+
+
+def test_list_templates():
+    client = app.test_client()
+    resp = client.get("/api/templates")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert any(t["section"] == "SUBJECTIVE" for t in data)
+
+
+def test_get_template():
+    client = app.test_client()
+    resp = client.get("/api/templates/SUBJECTIVE/v1")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "Subjective" in data["template"]

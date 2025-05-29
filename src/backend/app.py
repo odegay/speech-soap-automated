@@ -1,19 +1,31 @@
 import json
 import logging
+import re
 from pathlib import Path
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from .openai_client import generate_text
-from .config import SERVER_CONFIG, CORS_CONFIG, DATA_DIR
-from .prompts import render_prompt, TemplateNotFoundError
+from .config import (
+    SERVER_CONFIG,
+    CORS_CONFIG,
+    DATA_DIR,
+    AUTH_CREDENTIALS,
+    LOG_FILE,
+    LOG_LEVEL,
+)
+from .prompts import render_prompt, TemplateNotFoundError, PROMPTS_DIR
 from .formatting import format_text
 from .version import get_version_info
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
+    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()],
+)
 logger = logging.getLogger(__name__)
 
 
@@ -33,6 +45,12 @@ CORS(
         }
     },
 )
+
+VALID_NAME = re.compile(r"^[A-Za-z0-9_]+$")
+
+
+def is_valid_name(name: str) -> bool:
+    return bool(VALID_NAME.match(name))
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -71,8 +89,23 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.json or {}
+    username = data.get("username")
+    password = data.get("password")
+    if (
+        username == AUTH_CREDENTIALS["username"]
+        and password == AUTH_CREDENTIALS["password"]
+    ):
+        return jsonify({"status": "ok"})
+    return jsonify({"error": "Invalid credentials"}), 401
+
+
 @app.route("/api/options/<name>")
 def get_options(name: str):
+    if not is_valid_name(name):
+        return jsonify({"error": "invalid name"}), 400
     path = DATA_DIR / "options" / f"{name}.json"
     if not path.exists():
         return jsonify({"error": "not found"}), 404
@@ -87,6 +120,8 @@ def get_sections():
 
 @app.route("/api/config/<section>")
 def get_config(section: str):
+    if not is_valid_name(section):
+        return jsonify({"error": "invalid section"}), 400
     path = DATA_DIR / "configs" / f"{section}.json"
     if not path.exists():
         return jsonify({"error": "not found"}), 404
@@ -104,6 +139,9 @@ def get_phrasebank(section: str):
     }
 
     # Get the corresponding phrasebank file name
+    if not is_valid_name(section):
+        return jsonify({"error": "invalid section"}), 400
+
     phrasebank_file = section_mapping.get(section)
     if not phrasebank_file:
         return jsonify({"error": "not found"}), 404
@@ -112,6 +150,35 @@ def get_phrasebank(section: str):
     if not path.exists():
         return jsonify({"error": "not found"}), 404
     return jsonify(load_json(path))
+
+
+@app.route("/api/templates")
+def list_templates():
+    templates = []
+    for p in PROMPTS_DIR.glob("*_*.txt"):
+        section, version = p.stem.split("_", 1)
+        templates.append({"section": section, "version": version})
+    return jsonify(templates)
+
+
+@app.route("/api/templates/<section>/<version>")
+def get_template(section: str, version: str):
+    if not is_valid_name(section) or not is_valid_name(version):
+        return jsonify({"error": "invalid name"}), 400
+    path = PROMPTS_DIR / f"{section}_{version}.txt"
+    if not path.exists():
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"template": path.read_text()})
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    from werkzeug.exceptions import HTTPException
+
+    if isinstance(e, HTTPException):
+        return jsonify({"error": e.description}), e.code
+    logger.error(f"Unhandled error: {e}")
+    return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/version")
