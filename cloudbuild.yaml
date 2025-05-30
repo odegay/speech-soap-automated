@@ -81,7 +81,7 @@ steps:
       - '--max-instances=$_MAX_INSTANCES'
       - '--port=$_PORT'
       - '--allow-unauthenticated'
-      - '--set-env-vars=ENVIRONMENT=$_ENV,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,CORS_ORIGINS=https://$_SERVICE_NAME-$PROJECT_ID.$_REGION.run.app'
+      - '--set-env-vars=ENVIRONMENT=$_ENV,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,CORS_ORIGINS=https://$_SERVICE_NAME-$PROJECT_ID.$_REGION.run.app,https://samp-170518.web.app,https://samp-170518.firebaseapp.com'
       - '--set-secrets=OPENAI_API_KEY=speech-soap-generator-openai-token:latest'
 
   # Deploy frontend to Firebase Hosting
