@@ -84,7 +84,7 @@ steps:
       - '--set-secrets=OPENAI_API_KEY=speech-soap-generator-openai-token:latest'
 
   # Deploy frontend to Firebase Hosting
-  - name: 'gcr.io/cloud-builders/npm'
+  - name: 'node:20'
     dir: 'src/frontend'
     entrypoint: bash
     args:
