@@ -103,8 +103,3 @@ options:
   dynamicSubstitutions: true
 
 timeout: '1800s'
-
-artifacts:
-  objects:
-    location: 'gs://$PROJECT_ID-artifacts/npm-cache'
-    paths: ['/workspace/.npm']
