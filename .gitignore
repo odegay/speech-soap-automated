@@ -71,3 +71,4 @@ coverage.xml
 !tsconfig.json
 !tslint.json
 !src/backend/data/**/*.json
+!firebase.json

@@ -24,6 +24,8 @@ An automated system for generating Subjective sections of speech therapy SOAP no
 
 ## Environment Variables
 
+For local development copy `.env.local.example` to `.env.local` and set your API key.
+For cloud deployment you can use `.env.cloud.example` or store secrets in Google Secret Manager.
 Create a `.env` file in the root directory with the following variables:
 
 ```env
@@ -146,6 +148,10 @@ docker run -p 8080:8080 soap-backend
 
 The health check endpoint `/api/health` is used by the container to verify that
 the service is running.
+
+Deployment is automated using **Cloud Build**. The pipeline builds the backend
+container, runs unit tests, and deploys the service to **Cloud Run**. The React
+frontend is deployed to **Firebase Hosting**.
 
 ## Contributing
 

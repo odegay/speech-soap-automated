@@ -14,6 +14,8 @@ pip install -r requirements.txt
 cp .env.example .env
 cp .env.local.example .env.local
 cp src/frontend/.env.local.example src/frontend/.env.local
+# optional: create `src/frontend/.env.production` for cloud deployment using
+# `src/frontend/.env.production.example` as a template
 # edit .env and .env.local files
 ```
 
