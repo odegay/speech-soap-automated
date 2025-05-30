@@ -30,7 +30,7 @@ def test_get_config():
 
 def test_get_phrasebank():
     client = app.test_client()
-    resp = client.get("/api/phrasebank/SUBJECTIVE")
+    resp = client.get("/api/phrasebank/communication")
     assert resp.status_code == 200
     data = resp.get_json()
     assert isinstance(data, list)
