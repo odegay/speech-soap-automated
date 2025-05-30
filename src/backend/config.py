@@ -21,10 +21,15 @@ else:
     load_dotenv()
 
 
-def _load_secret(secret_id: str) -> str:
-    """Load a secret from Google Secret Manager if available."""
+def _load_secret(secret_id: str, env_var_key: str = None) -> str:
+    """Load a secret from Google Secret Manager if available.
+    
+    Args:
+        secret_id: The ID of the secret in Google Secret Manager
+        env_var_key: Optional environment variable key to use as fallback
+    """
     if not secretmanager or not os.getenv("GOOGLE_CLOUD_PROJECT"):
-        return os.getenv(secret_id, "")  # Fallback to env var
+        return os.getenv(env_var_key or secret_id, "")  # Fallback to env var
     try:
         client = secretmanager.SecretManagerServiceClient()
         name = f"projects/{os.environ['GOOGLE_CLOUD_PROJECT']}/secrets/{secret_id}/versions/latest"
@@ -32,7 +37,7 @@ def _load_secret(secret_id: str) -> str:
         return response.payload.data.decode("UTF-8")
     except Exception as e:
         logger.error(f"Failed to load secret {secret_id}: {str(e)}")
-        return os.getenv(secret_id, "")  # Fallback to env var
+        return os.getenv(env_var_key or secret_id, "")  # Fallback to env var
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -49,17 +54,29 @@ SERVER_CONFIG = {
 
 # OpenAI configuration
 OPENAI_CONFIG = {
-    "api_key": os.getenv("OPENAI_API_KEY") or _load_secret("speech-soap-generator-openai-token"),
+    "api_key": os.getenv("OPENAI_API_KEY") or _load_secret("speech-soap-generator-openai-token", "OPENAI_API_KEY"),
     "model": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
     "max_tokens": int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
 }
 
 # CORS configuration
+def get_default_cors_origins():
+    """Get default CORS origins including the Cloud Run URL if project ID is available."""
+    default_origins = [
+        "http://localhost:3000",
+        "http://localhost:8788"
+    ]
+    
+    # Add Cloud Run URL if project ID is available
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+    if project_id:
+        cloud_run_url = f"https://soap-backend-{project_id}.us-central1.run.app"
+        default_origins.append(cloud_run_url)
+    
+    return ",".join(default_origins)
+
 CORS_CONFIG = {
-    "origins": os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:3000,http://localhost:8788,https://soap-backend-${PROJECT_ID}.us-central1.run.app"
-    ).split(","),
+    "origins": os.getenv("CORS_ORIGINS", get_default_cors_origins()).split(","),
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"],
     "expose_headers": ["Content-Type", "Authorization"],
