@@ -64,14 +64,11 @@ def get_default_cors_origins():
     """Get default CORS origins including the Cloud Run URL if project ID is available."""
     default_origins = [
         "http://localhost:3000",
-        "http://localhost:8788"
+        "http://localhost:8788",
+        "https://soap-backend-29375673872.us-central1.run.app",
+        "https://speech-soap-automated.web.app",  # Firebase Hosting URL
+        "https://speech-soap-automated.firebaseapp.com"  # Alternative Firebase URL
     ]
-    
-    # Add Cloud Run URL if project ID is available
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-    if project_id:
-        cloud_run_url = f"https://soap-backend-{project_id}.us-central1.run.app"
-        default_origins.append(cloud_run_url)
     
     return ",".join(default_origins)
 

@@ -80,6 +80,7 @@ steps:
       - '--min-instances=$_MIN_INSTANCES'
       - '--max-instances=$_MAX_INSTANCES'
       - '--port=$_PORT'
+      - '--allow-unauthenticated'
       - '--set-env-vars=ENVIRONMENT=$_ENV,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,CORS_ORIGINS=https://$_SERVICE_NAME-$PROJECT_ID.$_REGION.run.app'
       - '--set-secrets=OPENAI_API_KEY=speech-soap-generator-openai-token:latest'
 

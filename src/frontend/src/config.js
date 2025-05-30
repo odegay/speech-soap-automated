@@ -3,7 +3,7 @@ const getBaseUrl = () => {
         return process.env.REACT_APP_API_BASE_URL;
     }
     return process.env.NODE_ENV === 'production'
-        ? 'https://api.your-domain.com'  // Replace with your actual production API URL
+        ? 'https://soap-backend-29375673872.us-central1.run.app'
         : 'http://localhost:3000';
 };
 

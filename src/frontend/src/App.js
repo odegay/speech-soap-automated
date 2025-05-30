@@ -4,6 +4,7 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import SoapForm from './components/SoapForm';
 import VersionInfo from './components/VersionInfo';
+import BackendStatus from './components/BackendStatus';
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -28,6 +29,7 @@ export default function App() {
 
   return (
     <>
+      <BackendStatus />
       <Routes>
         <Route
           path="/login"
