@@ -84,9 +84,14 @@ steps:
       - '--set-secrets=OPENAI_API_KEY=speech-soap-generator-openai-token:latest'
 
   # Deploy frontend to Firebase Hosting
-  - name: 'firebase/cli'
+  - name: 'gcr.io/cloud-builders/npm'
     dir: 'src/frontend'
-    args: ['deploy', '--project', '$PROJECT_ID', '--only', 'hosting']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        npm install -g firebase-tools
+        firebase deploy --project $PROJECT_ID --only hosting
 
 images:
   - 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$SHORT_SHA'
