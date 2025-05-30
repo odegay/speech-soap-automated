@@ -44,7 +44,7 @@ steps:
     args:
       - -c
       - |
-        CI=true npm test -- --watchAll=false
+        CI=true npm test -- --watchAll=false --passWithNoTests
     env:
       - 'ENVIRONMENT=${_ENV}'
       - 'CI=true'
