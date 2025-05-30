@@ -44,9 +44,11 @@ steps:
     args:
       - -c
       - |
-        npm test
+        CI=true npm test -- --watchAll=false
     env:
       - 'ENVIRONMENT=${_ENV}'
+      - 'CI=true'
+    timeout: '300s'
   - name: 'node:18'
     dir: 'src/frontend'
     entrypoint: bash
