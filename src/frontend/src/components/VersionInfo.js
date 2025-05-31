@@ -1,30 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import config from '../config';
-import { getVersionInfo as getFrontendVersion } from '../version';
 
-const VersionInfo = () => {
-    const [backendVersion, setBackendVersion] = useState(null);
-    const frontendVersion = getFrontendVersion();
+export default function VersionInfo() {
+    const [version, setVersion] = useState(null);
 
     useEffect(() => {
-        fetch(config.api.endpoints.version)
-            .then(response => response.json())
-            .then(data => setBackendVersion(data))
-            .catch(() => setBackendVersion(null));
+        fetch(`${config.api.baseUrl}${config.api.endpoints.version}`)
+            .then((r) => r.json())
+            .then(setVersion)
+            .catch(error => console.error('Error fetching version:', error));
     }, []);
 
-    if (!backendVersion) {
-        return null;
-    }
+    if (!version) return null;
 
     return (
         <div className="version-info small text-muted">
-            <div>Frontend: v{frontendVersion.version} ({frontendVersion.buildDate})</div>
-            <div>Backend: v{backendVersion.version} ({backendVersion.build_date})</div>
-            <div>API: {backendVersion.api_version}</div>
-            <div>OpenAI: {backendVersion.openai_model}</div>
+            <div>Backend: v{version.version} ({version.build_date})</div>
+            <div>API: {version.api_version}</div>
+            <div>OpenAI: {version.openai_model}</div>
         </div>
     );
-};
-
-export default VersionInfo; 
+} 

@@ -5,13 +5,14 @@ import Dashboard from './components/Dashboard';
 import SoapForm from './components/SoapForm';
 import VersionInfo from './components/VersionInfo';
 import BackendStatus from './components/BackendStatus';
+import config from './config';
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [sections, setSections] = useState([]);
 
   useEffect(() => {
-    fetch('/api/sections')
+    fetch(`${config.api.baseUrl}${config.api.endpoints.sections}`)
       .then((r) => r.json())
       .then((data) => setSections(data.filter((s) => s.enabled)))
       .catch(() =>

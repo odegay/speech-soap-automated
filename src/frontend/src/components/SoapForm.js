@@ -15,7 +15,7 @@ export default function SoapForm({ section }) {
 
   // Load form configuration
   useEffect(() => {
-    fetch(config.api.endpoints.config(section))
+    fetch(`${config.api.baseUrl}${config.api.endpoints.config(section)}`)
       .then((r) => r.json())
       .then((data) => {
         // Sort fields by order if specified
@@ -39,12 +39,7 @@ export default function SoapForm({ section }) {
   useEffect(() => {
     fields.forEach((f) => {
       if (f.options && !options[f.options]) {
-        fetch(config.api.endpoints.options(f.options))
-          .then((r) => r.json())
-          .then((data) =>
-            setOptions((o) => ({ ...o, [f.options]: data }))
-          )
-          .catch(() => setOptions((o) => ({ ...o, [f.options]: [] })));
+        loadOptions(f);
       }
     });
   }, [fields, options]);
@@ -54,16 +49,26 @@ export default function SoapForm({ section }) {
     const textFields = fields.filter(f => f.type === 'text');
     textFields.forEach(field => {
       if (!phrases[field.id]) {
-        fetch(config.api.endpoints.phrasebank(field.id))
-          .then((r) => r.json())
-          .then((data) => {
-            const phrasesArray = Array.isArray(data) ? data : [];
-            setPhrases(prev => ({ ...prev, [field.id]: phrasesArray }));
-          })
-          .catch(() => setPhrases(prev => ({ ...prev, [field.id]: [] })));
+        loadPhrasebank(field);
       }
     });
   }, [fields]);
+
+  const loadOptions = async (f) => {
+    if (f.options) {
+      const resp = await fetch(`${config.api.baseUrl}${config.api.endpoints.options(f.options)}`);
+      const data = await resp.json();
+      setOptions((prev) => ({ ...prev, [f.options]: data }));
+    }
+  };
+
+  const loadPhrasebank = async (field) => {
+    if (field.phrasebank) {
+      const resp = await fetch(`${config.api.baseUrl}${config.api.endpoints.phrasebank(field.id)}`);
+      const data = await resp.json();
+      setPhrases((prev) => ({ ...prev, [field.id]: data }));
+    }
+  };
 
   const toggleValue = (id, value) => {
     setValues((vals) => {
@@ -97,11 +102,13 @@ export default function SoapForm({ section }) {
     setGenerated(''); // Clear the text field
     
     try {
-      const resp = await fetch('/api/generate', {
+      const resp = await fetch(`${config.api.baseUrl}${config.api.endpoints.generate}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          section: section,
+          section,
           schema_version: 'v1',
           inputs: values
         }),

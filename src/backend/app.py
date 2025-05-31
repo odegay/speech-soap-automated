@@ -9,7 +9,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     cloud_logging = None
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 
 from .openai_client import generate_text
@@ -48,21 +48,37 @@ def load_json(path: Path):
 
 
 app = Flask(__name__)
-CORS(
-    app,
-    resources={
-        r"/api/*": {
-            "origins": CORS_CONFIG["origins"],
-            "methods": CORS_CONFIG["methods"],
-            "allow_headers": CORS_CONFIG["allow_headers"],
-        }
-    },
-)
 
+# Enable CORS for all routes
+CORS(app, 
+     resources={r"/api/*": {
+         "origins": CORS_CONFIG["origins"],
+         "methods": CORS_CONFIG["methods"],
+         "allow_headers": CORS_CONFIG["allow_headers"],
+         "expose_headers": CORS_CONFIG["expose_headers"],
+         "supports_credentials": CORS_CONFIG["supports_credentials"],
+         "max_age": CORS_CONFIG["max_age"]
+     }},
+     supports_credentials=True)
+
+# Log CORS configuration on startup
+logger.info("CORS Configuration: %s", CORS_CONFIG)
+
+@app.after_request
+def after_request(response):
+    origin = request.headers.get('Origin')
+    if origin in CORS_CONFIG["origins"]:
+        response.headers.add('Access-Control-Allow-Origin', origin)
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 @app.before_request
 def log_request_info():
     logger.info("%s %s", request.method, request.path)
+    logger.info("Origin: %s", request.headers.get('Origin'))
+    logger.info("Headers: %s", dict(request.headers))
 
 VALID_NAME = re.compile(r"^[A-Za-z0-9_]+$")
 

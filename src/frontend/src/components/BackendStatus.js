@@ -10,8 +10,14 @@ const BackendStatus = () => {
 
     useEffect(() => {
         const checkBackend = async () => {
+            const url = `${config.api.baseUrl}${config.api.endpoints.health}`;
+            console.log('Checking backend at:', url);
+            console.log('Current environment:', config.environment);
+            console.log('Is production:', config.isProduction);
+            
             try {
-                const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.health}`);
+                const response = await fetch(url);
+                console.log('Backend response status:', response.status);
                 if (response.ok) {
                     setBackendStatus({
                         isChecking: false,
@@ -19,9 +25,10 @@ const BackendStatus = () => {
                         error: null
                     });
                 } else {
-                    throw new Error('Backend health check failed');
+                    throw new Error(`Backend health check failed with status: ${response.status}`);
                 }
             } catch (error) {
+                console.error('Backend check error:', error);
                 setBackendStatus({
                     isChecking: false,
                     isAvailable: false,
