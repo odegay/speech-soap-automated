@@ -9,8 +9,8 @@
   {"id": "engagement", "label": "Engagement Level", "type": "single", "order": 8, "collapsible": false, "options": "engagement_level"},
   {"id": "cooperation", "label": "Cooperation Level", "type": "single", "order": 9, "collapsible": false, "options": "cooperation_level"},
   
-  {"id": "communication", "label": "Communication Examples", "type": "text", "order": 10, "collapsible": true},
-  {"id": "difficulties", "label": "Difficulties/Errors", "type": "text", "order": 11, "collapsible": true},
-  {"id": "observations", "label": "Unique Observations", "type": "text", "order": 12, "collapsible": true},
-  {"id": "transitionNotes", "label": "Transition Notes", "type": "text", "order": 13, "collapsible": true}
+  {"id": "communication", "label": "Communication Examples", "type": "text", "order": 10, "collapsible": true, "phrasebank": "communication"},
+  {"id": "difficulties", "label": "Difficulties/Errors", "type": "text", "order": 11, "collapsible": true, "phrasebank": "difficulties"},
+  {"id": "observations", "label": "Unique Observations", "type": "text", "order": 12, "collapsible": true, "phrasebank": "observations"},
+  {"id": "transitionNotes", "label": "Transition Notes", "type": "text", "order": 13, "collapsible": true, "phrasebank": "transitionNotes"}
 ]

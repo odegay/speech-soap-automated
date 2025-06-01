@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function PhraseBank({ phrases = [], onInsert }) {
+export default function PhraseBank({ phrases = [], onInsert, error = null }) {
   const [query, setQuery] = useState('');
   
   // Ensure phrases is always an array
@@ -19,10 +19,24 @@ export default function PhraseBank({ phrases = [], onInsert }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
+      {error && (
+        <div className="alert alert-warning mb-2">
+          {error}
+        </div>
+      )}
+      {phrasesArray.length === 0 && !error && (
+        <div className="text-muted mb-2">
+          No phrases available
+        </div>
+      )}
       <ul className="list-unstyled">
         {filtered.map((p) => (
           <li key={p} className="mb-1">
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onInsert(p)}>
+            <button 
+              type="button" 
+              className="btn btn-sm btn-outline-secondary" 
+              onClick={() => onInsert(p)}
+            >
               {p}
             </button>
           </li>

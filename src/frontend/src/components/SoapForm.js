@@ -46,7 +46,7 @@ export default function SoapForm({ section }) {
 
   // Load phrasebanks for text fields
   useEffect(() => {
-    const textFields = fields.filter(f => f.type === 'text');
+    const textFields = fields.filter(f => f.type === 'text' && f.phrasebank);
     textFields.forEach(field => {
       if (!phrases[field.id]) {
         loadPhrasebank(field);
@@ -64,9 +64,17 @@ export default function SoapForm({ section }) {
 
   const loadPhrasebank = async (field) => {
     if (field.phrasebank) {
-      const resp = await fetch(`${config.api.baseUrl}${config.api.endpoints.phrasebank(field.id)}`);
-      const data = await resp.json();
-      setPhrases((prev) => ({ ...prev, [field.id]: data }));
+      try {
+        const resp = await fetch(`${config.api.baseUrl}${config.api.endpoints.phrasebank(field.phrasebank)}`);
+        if (!resp.ok) {
+          console.error(`Failed to load phrasebank for ${field.id}:`, resp.statusText);
+          return;
+        }
+        const data = await resp.json();
+        setPhrases((prev) => ({ ...prev, [field.id]: data }));
+      } catch (error) {
+        console.error(`Error loading phrasebank for ${field.id}:`, error);
+      }
     }
   };
 

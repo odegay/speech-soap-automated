@@ -172,18 +172,32 @@ def get_phrasebank(section: str):
         "transitionNotes": "transition_notes",
     }
 
+    logger.info(f"Loading phrasebank for section: {section}")
+    
     # Get the corresponding phrasebank file name
     if not is_valid_name(section):
+        logger.error(f"Invalid section name: {section}")
         return jsonify({"error": "invalid section"}), 400
 
     phrasebank_file = section_mapping.get(section)
     if not phrasebank_file:
+        logger.error(f"No mapping found for section: {section}")
         return jsonify({"error": "not found"}), 404
 
     path = DATA_DIR / "phrasebanks" / f"{phrasebank_file}.json"
+    logger.info(f"Loading phrasebank from: {path}")
+    
     if not path.exists():
+        logger.error(f"Phrasebank file not found: {path}")
         return jsonify({"error": "not found"}), 404
-    return jsonify(load_json(path))
+        
+    try:
+        data = load_json(path)
+        logger.info(f"Successfully loaded {len(data)} phrases for section {section}")
+        return jsonify(data)
+    except Exception as e:
+        logger.error(f"Error loading phrasebank: {str(e)}")
+        return jsonify({"error": "Error loading phrasebank"}), 500
 
 
 @app.route("/api/templates")
